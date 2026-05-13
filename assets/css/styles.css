@@ -147,6 +147,36 @@ canvas {
   font-size: 12px;
 }
 
+.side-tools {
+  padding: 0 0 18px;
+}
+
+.side-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.side-tool:hover,
+.side-tool.active {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.side-tool svg {
+  width: 16px;
+  height: 16px;
+}
+
 .side-nav {
   display: grid;
   gap: 18px;
@@ -316,9 +346,31 @@ canvas {
 }
 
 .icon-button svg,
-.button svg {
+.button svg,
+.memory-button svg {
   width: 17px;
   height: 17px;
+}
+
+.memory-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 720;
+  white-space: nowrap;
+}
+
+.memory-button:hover {
+  border-color: var(--blue);
+  color: var(--blue);
 }
 
 .mobile-menu-button {
@@ -466,7 +518,11 @@ h4 {
 .takeaway-card,
 .related-card,
 .viz-card,
-.modal-card {
+.modal-card,
+.memory-card,
+.stat-card,
+.memory-list-item,
+.empty-memory {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface-raised);
@@ -1257,6 +1313,181 @@ h4 {
   font-weight: 650;
 }
 
+.memory-hero {
+  align-items: center;
+}
+
+.memory-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  gap: 14px;
+}
+
+.memory-card {
+  padding: 18px;
+}
+
+.memory-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.memory-card-head svg {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  color: var(--blue);
+}
+
+.memory-card p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.memory-textarea {
+  width: 100%;
+  min-height: 220px;
+  resize: vertical;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  line-height: 1.65;
+}
+
+.memory-textarea:focus,
+.memory-select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 18%, transparent);
+}
+
+.memory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.memory-status {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.memory-label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.memory-select {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+
+.memory-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.stat-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.stat-card svg {
+  width: 22px;
+  height: 22px;
+  color: var(--blue);
+}
+
+.stat-card strong {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.stat-card span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.memory-list {
+  display: grid;
+  gap: 12px;
+}
+
+.memory-list-item {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  transition: transform 160ms ease, border 160ms ease, box-shadow 160ms ease;
+}
+
+.memory-list-item:hover {
+  border-color: var(--blue);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+.memory-list-item.due {
+  border-color: color-mix(in srgb, var(--amber) 60%, var(--line));
+  background: color-mix(in srgb, var(--amber-soft) 38%, var(--surface-raised));
+}
+
+.memory-list-item span {
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.memory-list-item p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.empty-memory {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 96px;
+  padding: 18px;
+  color: var(--muted);
+}
+
+.empty-memory svg {
+  width: 22px;
+  height: 22px;
+  color: var(--blue);
+}
+
+.file-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.file-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
 .chapter-pager {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1401,7 +1632,8 @@ body .style .token.string {
   .info-grid,
   .concept-grid,
   .viz-grid,
-  .two-column {
+  .two-column,
+  .memory-workbench {
     grid-template-columns: 1fr;
   }
 
@@ -1440,6 +1672,7 @@ body .style .token.string {
   .checklist,
   .related-row,
   .takeaway-grid,
+  .memory-stats,
   .modal-grid,
   .chapter-pager {
     grid-template-columns: 1fr;
@@ -1450,7 +1683,9 @@ body .style .token.string {
   .chapter-card,
   .formula-card,
   .concept-card,
-  .viz-card {
+  .viz-card,
+  .memory-card,
+  .stat-card {
     padding: 16px;
   }
 
@@ -1460,5 +1695,9 @@ body .style .token.string {
 
   .global-search input {
     padding-right: 10px;
+  }
+
+  .memory-button span {
+    display: none;
   }
 }

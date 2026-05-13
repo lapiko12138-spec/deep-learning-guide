@@ -8,6 +8,8 @@
     const root = document.getElementById('app');
     if (page === 'home') {
       root.innerHTML = C.renderHome();
+    } else if (page === 'memory') {
+      root.innerHTML = C.renderMemory();
     } else {
       const chapter = C.chapterBySlug(document.body.dataset.chapter);
       root.innerHTML = C.renderChapter(chapter || data.chapters[0]);
@@ -15,6 +17,7 @@
     bindCommonInteractions(root);
     bindFormulaExplorer(root);
     bindChecklist(root);
+    bindMemory(root);
     bindSearch(root);
     window.DLVisualizations.init(root);
     refreshMath();
@@ -52,6 +55,8 @@
       if (formulaCard && !event.target.closest('a')) openFormulaModal(formulaCard.dataset.formulaId);
       const formulaResult = event.target.closest('.formula-result');
       if (formulaResult) openFormulaModal(formulaResult.dataset.formulaId);
+      const favorite = event.target.closest('[data-formula-favorite]');
+      if (favorite) toggleFormulaFavorite(favorite.dataset.formulaFavorite);
     });
 
     document.addEventListener('keydown', (event) => {
@@ -62,6 +67,104 @@
         if (search) search.focus();
       }
     });
+  }
+
+  function bindMemory(root) {
+    const noteArea = root.querySelector('[data-note-chapter]');
+    if (noteArea) bindChapterMemory(root, noteArea);
+    bindMemoryDashboard(root);
+  }
+
+  function bindChapterMemory(root, noteArea) {
+    const slug = noteArea.dataset.noteChapter;
+    const saveNote = root.querySelector(`[data-save-note="${slug}"]`);
+    const noteStatus = root.querySelector('[data-note-status]');
+    const confidence = root.querySelector(`[data-review-confidence="${slug}"]`);
+    const saveReview = root.querySelector(`[data-save-review="${slug}"]`);
+    const reviewStatus = root.querySelector('[data-review-status]');
+
+    noteArea.addEventListener('input', () => {
+      if (noteStatus) noteStatus.textContent = '有未保存修改';
+    });
+
+    if (saveNote) {
+      saveNote.addEventListener('click', () => {
+        const memory = C.readMemory();
+        const text = noteArea.value.trim();
+        if (text) {
+          memory.notes[slug] = { text, updatedAt: new Date().toISOString() };
+        } else {
+          delete memory.notes[slug];
+        }
+        C.writeMemory(memory);
+        if (noteStatus) noteStatus.textContent = text ? `已保存：${C.formatDate(memory.notes[slug].updatedAt)}` : '笔记已清空';
+      });
+    }
+
+    if (saveReview && confidence) {
+      saveReview.addEventListener('click', () => {
+        const days = { again: 1, shaky: 3, ok: 7, solid: 21 }[confidence.value] || 7;
+        const nextReviewAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+        const memory = C.readMemory();
+        memory.reviews[slug] = {
+          confidence: confidence.value,
+          nextReviewAt,
+          updatedAt: new Date().toISOString()
+        };
+        C.writeMemory(memory);
+        if (reviewStatus) reviewStatus.textContent = C.reviewStatus(memory.reviews[slug]);
+      });
+    }
+  }
+
+  function bindMemoryDashboard(root) {
+    const exportButton = root.querySelector('[data-export-memory]');
+    const importInput = root.querySelector('[data-import-memory]');
+
+    if (exportButton) {
+      exportButton.addEventListener('click', () => {
+        const checks = {};
+        data.chapters.forEach((chapter) => {
+          try {
+            checks[chapter.slug] = JSON.parse(localStorage.getItem(`dl-check-${chapter.slug}`) || '{}');
+          } catch {
+            checks[chapter.slug] = {};
+          }
+        });
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          app: 'deep-learning-guide',
+          memory: C.readMemory(),
+          checks
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `deep-learning-guide-memory-${new Date().toISOString().slice(0, 10)}.json`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      });
+    }
+
+    if (importInput) {
+      importInput.addEventListener('change', async () => {
+        const file = importInput.files && importInput.files[0];
+        if (!file) return;
+        const text = await file.text();
+        try {
+          const payload = JSON.parse(text);
+          if (payload.memory) C.writeMemory(payload.memory);
+          if (payload.checks) {
+            Object.entries(payload.checks).forEach(([slug, value]) => {
+              localStorage.setItem(`dl-check-${slug}`, JSON.stringify(value || {}));
+            });
+          }
+          window.location.reload();
+        } catch {
+          alert('导入失败：文件不是有效的学习记忆 JSON。');
+        }
+      });
+    }
   }
 
   function bindFormulaExplorer(root) {
@@ -143,6 +246,8 @@
   function openFormulaModal(id) {
     const formula = data.formulas.find((item) => item.id === id);
     if (!formula) return;
+    const memory = C.readMemory();
+    const isFavorite = Boolean(memory.favorites[id]);
     const chapters = formula.chapterRefs.map((chapterId) => {
       const chapter = C.chapterById(chapterId);
       return `<a class="mini-chip" href="${C.chapterHref(chapter)}">Ch.${chapter.id} ${C.escapeHTML(chapter.title)}</a>`;
@@ -162,12 +267,29 @@
             <div><h3>可视化理解</h3><p>${C.escapeHTML(formula.visual)}</p></div>
           </div>
           <div class="route-chips">${chapters}</div>
+          <button class="button ghost" data-formula-favorite="${C.escapeHTML(id)}">${C.icon(isFavorite ? 'star-off' : 'star')}${isFavorite ? '取消收藏' : '收藏公式'}</button>
           ${formula.source === '现代延伸' ? '<p class="modern-disclaimer">这是原书之后的发展补充，不属于对应原书章节的核心内容。</p>' : ''}
         </article>
       </div>
     `;
     refreshMath();
     refreshIcons();
+  }
+
+  function toggleFormulaFavorite(id) {
+    const memory = C.readMemory();
+    if (memory.favorites[id]) {
+      delete memory.favorites[id];
+    } else {
+      memory.favorites[id] = { createdAt: new Date().toISOString() };
+    }
+    C.writeMemory(memory);
+    const button = document.querySelector('[data-formula-favorite]');
+    if (button) {
+      const isFavorite = Boolean(memory.favorites[id]);
+      button.innerHTML = `${C.icon(isFavorite ? 'star-off' : 'star')}${isFavorite ? '取消收藏' : '收藏公式'}`;
+      refreshIcons();
+    }
   }
 
   function closeModal() {

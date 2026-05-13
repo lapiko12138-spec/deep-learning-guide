@@ -50,6 +50,44 @@
     }
   }
 
+  function memoryHref() {
+    return `${basePath()}/memory.html`;
+  }
+
+  function emptyMemory() {
+    return { version: 1, notes: {}, reviews: {}, favorites: {} };
+  }
+
+  function readMemory() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('dl-memory-v1') || '{}');
+      return Object.assign(emptyMemory(), saved, {
+        notes: saved.notes || {},
+        reviews: saved.reviews || {},
+        favorites: saved.favorites || {}
+      });
+    } catch {
+      return emptyMemory();
+    }
+  }
+
+  function writeMemory(memory) {
+    localStorage.setItem('dl-memory-v1', JSON.stringify(Object.assign(emptyMemory(), memory)));
+  }
+
+  function formatDate(value) {
+    if (!value) return '未安排';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '未安排';
+    return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function reviewStatus(review) {
+    if (!review) return '尚未加入复习队列';
+    const due = new Date(review.nextReviewAt).getTime() <= Date.now() ? '今天应复习' : `下次复习：${formatDate(review.nextReviewAt)}`;
+    return `${due} / 熟悉度：${review.confidence || '未标记'}`;
+  }
+
   function sidebar(activeSlug) {
     const partGroups = data.parts.map((part) => {
       const links = part.chapters.map((id) => {
@@ -81,6 +119,9 @@
             <div class="brand-subtitle">原书知识导览</div>
           </div>
         </div>
+        <div class="side-tools">
+          <a class="side-tool ${activeSlug === 'memory' ? 'active' : ''}" href="${memoryHref()}">${icon('brain')}学习记忆</a>
+        </div>
         <nav class="side-nav" aria-label="章节导航">
           ${partGroups}
         </nav>
@@ -97,6 +138,7 @@
           <input id="global-search" type="search" placeholder="搜索章节、公式、术语..." autocomplete="off">
           <div id="search-results" class="search-results" hidden></div>
         </div>
+        <a class="memory-button" href="${memoryHref()}">${icon('brain')}<span>学习记忆</span></a>
         <button class="icon-button" id="theme-toggle" title="切换深色模式" aria-label="切换深色模式">${icon('moon')}</button>
       </header>
     `;
@@ -132,6 +174,7 @@
           <div class="hero-actions">
             <a class="button primary" href="${chapterHref(chapterById(1))}">${icon('play')}开始学习</a>
             <a class="button ghost" href="${heroContinueHref()}">${icon('bookmark')}继续上次</a>
+            <a class="button ghost" href="${memoryHref()}">${icon('brain')}学习记忆</a>
           </div>
         </div>
         <div class="study-panel">
@@ -331,6 +374,9 @@
 
   function renderChapter(chapter) {
     localStorage.setItem('dl-last-chapter', chapter.slug);
+    const memory = readMemory();
+    const note = memory.notes[chapter.slug];
+    const review = memory.reviews[chapter.slug];
     return layout(`
       <article class="chapter-page">
         <section class="chapter-hero">
@@ -442,6 +488,52 @@
           </div>
         </section>
 
+        <section class="section-block" id="memory">
+          <div class="section-heading">
+            <p class="eyebrow">Learning Memory</p>
+            <h2>本章记忆</h2>
+            <p>这里保存你的读书痕迹：本章笔记、复习安排和之后的学习回看入口。</p>
+          </div>
+          <div class="memory-workbench">
+            <article class="memory-card">
+              <div class="memory-card-head">
+                <div>
+                  <h3>本章学习笔记</h3>
+                  <p>写下卡住的点、自己的解释、需要二刷的小节。</p>
+                </div>
+                ${icon('notebook-pen')}
+              </div>
+              <textarea class="memory-textarea" data-note-chapter="${escapeHTML(chapter.slug)}" placeholder="例如：2.7 特征分解要回看；PCA 的目标函数可以和自编码器对照理解。">${escapeHTML(note ? note.text : '')}</textarea>
+              <div class="memory-actions">
+                <button class="button primary small" data-save-note="${escapeHTML(chapter.slug)}">${icon('save')}保存笔记</button>
+                <span class="memory-status" data-note-status>${note ? `上次保存：${formatDate(note.updatedAt)}` : '尚未保存'}</span>
+              </div>
+            </article>
+            <article class="memory-card">
+              <div class="memory-card-head">
+                <div>
+                  <h3>加入复习队列</h3>
+                  <p>用熟悉度决定下次回看的时间。</p>
+                </div>
+                ${icon('calendar-clock')}
+              </div>
+              <label class="memory-label">
+                熟悉度
+                <select class="memory-select" data-review-confidence="${escapeHTML(chapter.slug)}">
+                  <option value="again" ${review && review.confidence === 'again' ? 'selected' : ''}>还不懂，明天再看</option>
+                  <option value="shaky" ${review && review.confidence === 'shaky' ? 'selected' : ''}>有点虚，3 天后复习</option>
+                  <option value="ok" ${!review || review.confidence === 'ok' ? 'selected' : ''}>基本懂，7 天后复习</option>
+                  <option value="solid" ${review && review.confidence === 'solid' ? 'selected' : ''}>很稳，21 天后复习</option>
+                </select>
+              </label>
+              <div class="memory-actions">
+                <button class="button primary small" data-save-review="${escapeHTML(chapter.slug)}">${icon('alarm-clock-check')}安排复习</button>
+                <span class="memory-status" data-review-status>${escapeHTML(reviewStatus(review))}</span>
+              </div>
+            </article>
+          </div>
+        </section>
+
         <section class="section-block" id="checklist">
           <div class="section-heading split">
             <div>
@@ -490,6 +582,118 @@
         </nav>
       </article>
     `, chapter.slug);
+  }
+
+  function renderMemory() {
+    const memory = readMemory();
+    const notes = Object.entries(memory.notes || {})
+      .filter(([, note]) => note && String(note.text || '').trim())
+      .sort((a, b) => new Date(b[1].updatedAt || 0) - new Date(a[1].updatedAt || 0));
+    const reviews = Object.entries(memory.reviews || {})
+      .filter(([, review]) => review && review.nextReviewAt)
+      .sort((a, b) => new Date(a[1].nextReviewAt) - new Date(b[1].nextReviewAt));
+    const favorites = Object.keys(memory.favorites || {}).filter((id) => memory.favorites[id]);
+    const completed = data.chapters.filter((chapter) => getProgress(chapter.slug) === 100);
+    const average = Math.round(data.chapters.reduce((sum, chapter) => sum + getProgress(chapter.slug), 0) / data.chapters.length);
+
+    return layout(`
+      <section class="chapter-hero memory-hero">
+        <div>
+          <p class="eyebrow">Learning Memory</p>
+          <h1>学习记忆库</h1>
+          <p class="hero-subtitle">这里不是新的教材页面，而是你的长期学习状态：章节掌握度、个人笔记、公式收藏和复习计划都保存在本地浏览器。</p>
+          <div class="hero-actions">
+            <button class="button primary" data-export-memory>${icon('download')}导出记忆</button>
+            <label class="button ghost file-button">${icon('upload')}导入记忆<input type="file" accept="application/json" data-import-memory></label>
+          </div>
+        </div>
+        <aside class="chapter-meta-panel">
+          <div><span>总进度</span><strong>${average}%</strong></div>
+          <div><span>笔记</span><strong>${notes.length} 条</strong></div>
+          <div><span>复习队列</span><strong>${reviews.length} 章</strong></div>
+        </aside>
+      </section>
+
+      <section class="section-block compact">
+        <div class="memory-stats">
+          ${memoryStat('完成章节', `${completed.length}/20`, 'check-circle-2')}
+          ${memoryStat('公式收藏', `${favorites.length}`, 'star')}
+          ${memoryStat('已有笔记', `${notes.length}`, 'notebook-tabs')}
+          ${memoryStat('待复习', `${reviews.filter(([, review]) => new Date(review.nextReviewAt).getTime() <= Date.now()).length}`, 'alarm-clock')}
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <p class="eyebrow">Review Queue</p>
+          <h2>复习队列</h2>
+          <p>按下次复习日期排序，到期的章节会排在前面。</p>
+        </div>
+        <div class="memory-list">
+          ${reviews.length ? reviews.map(([slug, review]) => renderReviewItem(slug, review)).join('') : renderEmptyMemory('还没有安排复习。进入任意章节，在“本章记忆”里安排一次复习。')}
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <p class="eyebrow">Notes</p>
+          <h2>章节笔记</h2>
+        </div>
+        <div class="memory-list">
+          ${notes.length ? notes.map(([slug, note]) => renderNoteItem(slug, note)).join('') : renderEmptyMemory('还没有写章节笔记。先从第一章或第二章写下一个卡点。')}
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <p class="eyebrow">Formula Favorites</p>
+          <h2>收藏公式</h2>
+        </div>
+        <div class="formula-grid compact-grid">
+          ${favorites.length ? favorites.map((id) => renderFormulaCard(data.formulas.find((formula) => formula.id === id))).join('') : renderEmptyMemory('还没有收藏公式。打开首页或章节公式卡片，点击公式后在弹窗中收藏。')}
+        </div>
+      </section>
+    `, 'memory');
+  }
+
+  function memoryStat(label, value, iconName) {
+    return `
+      <article class="stat-card">
+        ${icon(iconName)}
+        <strong>${escapeHTML(value)}</strong>
+        <span>${escapeHTML(label)}</span>
+      </article>
+    `;
+  }
+
+  function renderEmptyMemory(text) {
+    return `<article class="empty-memory">${icon('sparkles')}<p>${escapeHTML(text)}</p></article>`;
+  }
+
+  function renderReviewItem(slug, review) {
+    const chapter = chapterBySlug(slug);
+    if (!chapter) return '';
+    const isDue = new Date(review.nextReviewAt).getTime() <= Date.now();
+    return `
+      <a class="memory-list-item ${isDue ? 'due' : ''}" href="${chapterHref(chapter)}#memory">
+        <span>${isDue ? '今天复习' : formatDate(review.nextReviewAt)}</span>
+        <strong>Ch.${chapter.id} ${escapeHTML(chapter.title)}</strong>
+        <p>${escapeHTML(reviewStatus(review))}</p>
+      </a>
+    `;
+  }
+
+  function renderNoteItem(slug, note) {
+    const chapter = chapterBySlug(slug);
+    if (!chapter) return '';
+    const preview = String(note.text || '').trim().slice(0, 180);
+    return `
+      <a class="memory-list-item" href="${chapterHref(chapter)}#memory">
+        <span>${formatDate(note.updatedAt)}</span>
+        <strong>Ch.${chapter.id} ${escapeHTML(chapter.title)}</strong>
+        <p>${escapeHTML(preview)}${note.text.length > 180 ? '...' : ''}</p>
+      </a>
+    `;
   }
 
   function infoBlock(title, text, iconName) {
@@ -654,8 +858,13 @@
     layout,
     renderHome,
     renderChapter,
+    renderMemory,
     renderFormulaCard,
     renderSearchResults,
-    getProgress
+    getProgress,
+    readMemory,
+    writeMemory,
+    formatDate,
+    reviewStatus
   };
 })();
