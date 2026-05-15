@@ -488,52 +488,6 @@
           </div>
         </section>
 
-        <section class="section-block" id="memory">
-          <div class="section-heading">
-            <p class="eyebrow">Learning Memory</p>
-            <h2>本章记忆</h2>
-            <p>这里保存你的读书痕迹：本章笔记、复习安排和之后的学习回看入口。</p>
-          </div>
-          <div class="memory-workbench">
-            <article class="memory-card">
-              <div class="memory-card-head">
-                <div>
-                  <h3>本章学习笔记</h3>
-                  <p>写下卡住的点、自己的解释、需要二刷的小节。</p>
-                </div>
-                ${icon('notebook-pen')}
-              </div>
-              <textarea class="memory-textarea" data-note-chapter="${escapeHTML(chapter.slug)}" placeholder="例如：2.7 特征分解要回看；PCA 的目标函数可以和自编码器对照理解。">${escapeHTML(note ? note.text : '')}</textarea>
-              <div class="memory-actions">
-                <button class="button primary small" data-save-note="${escapeHTML(chapter.slug)}">${icon('save')}保存笔记</button>
-                <span class="memory-status" data-note-status>${note ? `上次保存：${formatDate(note.updatedAt)}` : '尚未保存'}</span>
-              </div>
-            </article>
-            <article class="memory-card">
-              <div class="memory-card-head">
-                <div>
-                  <h3>加入复习队列</h3>
-                  <p>用熟悉度决定下次回看的时间。</p>
-                </div>
-                ${icon('calendar-clock')}
-              </div>
-              <label class="memory-label">
-                熟悉度
-                <select class="memory-select" data-review-confidence="${escapeHTML(chapter.slug)}">
-                  <option value="again" ${review && review.confidence === 'again' ? 'selected' : ''}>还不懂，明天再看</option>
-                  <option value="shaky" ${review && review.confidence === 'shaky' ? 'selected' : ''}>有点虚，3 天后复习</option>
-                  <option value="ok" ${!review || review.confidence === 'ok' ? 'selected' : ''}>基本懂，7 天后复习</option>
-                  <option value="solid" ${review && review.confidence === 'solid' ? 'selected' : ''}>很稳，21 天后复习</option>
-                </select>
-              </label>
-              <div class="memory-actions">
-                <button class="button primary small" data-save-review="${escapeHTML(chapter.slug)}">${icon('alarm-clock-check')}安排复习</button>
-                <span class="memory-status" data-review-status>${escapeHTML(reviewStatus(review))}</span>
-              </div>
-            </article>
-          </div>
-        </section>
-
         <section class="section-block" id="checklist">
           <div class="section-heading split">
             <div>
@@ -577,11 +531,63 @@
           </section>
         ` : ''}
 
+        ${renderChapterMemory(chapter, note, review)}
+
         <nav class="chapter-pager">
           ${renderPager(chapter)}
         </nav>
       </article>
     `, chapter.slug);
+  }
+
+  function renderChapterMemory(chapter, note, review) {
+    return `
+      <section class="section-block" id="memory">
+        <div class="section-heading">
+          <p class="eyebrow">Learning Memory</p>
+          <h2>本章记忆</h2>
+          <p>读完本章后，把卡住的点、自己的解释和复习计划沉淀在这里。</p>
+        </div>
+        <div class="memory-workbench">
+          <article class="memory-card">
+            <div class="memory-card-head">
+              <div>
+                <h3>本章学习笔记</h3>
+                <p>写下卡住的点、自己的解释、需要二刷的小节。</p>
+              </div>
+              ${icon('notebook-pen')}
+            </div>
+            <textarea class="memory-textarea" data-note-chapter="${escapeHTML(chapter.slug)}" placeholder="例如：2.7 特征分解要回看；PCA 的目标函数可以和自编码器对照理解。">${escapeHTML(note ? note.text : '')}</textarea>
+            <div class="memory-actions">
+              <button class="button primary small" data-save-note="${escapeHTML(chapter.slug)}">${icon('save')}保存笔记</button>
+              <span class="memory-status" data-note-status>${note ? `上次保存：${formatDate(note.updatedAt)}` : '尚未保存'}</span>
+            </div>
+          </article>
+          <article class="memory-card">
+            <div class="memory-card-head">
+              <div>
+                <h3>加入复习队列</h3>
+                <p>用熟悉度决定下次回看的时间。</p>
+              </div>
+              ${icon('calendar-clock')}
+            </div>
+            <label class="memory-label">
+              熟悉度
+              <select class="memory-select" data-review-confidence="${escapeHTML(chapter.slug)}">
+                <option value="again" ${review && review.confidence === 'again' ? 'selected' : ''}>还不懂，明天再看</option>
+                <option value="shaky" ${review && review.confidence === 'shaky' ? 'selected' : ''}>有点虚，3 天后复习</option>
+                <option value="ok" ${!review || review.confidence === 'ok' ? 'selected' : ''}>基本懂，7 天后复习</option>
+                <option value="solid" ${review && review.confidence === 'solid' ? 'selected' : ''}>很稳，21 天后复习</option>
+              </select>
+            </label>
+            <div class="memory-actions">
+              <button class="button primary small" data-save-review="${escapeHTML(chapter.slug)}">${icon('alarm-clock-check')}安排复习</button>
+              <span class="memory-status" data-review-status>${escapeHTML(reviewStatus(review))}</span>
+            </div>
+          </article>
+        </div>
+      </section>
+    `;
   }
 
   function renderMemory() {

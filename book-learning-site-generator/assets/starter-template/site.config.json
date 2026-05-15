@@ -1,0 +1,24 @@
+{
+  "siteType": "book-learning-guide",
+  "theme": "notion-linear-docs",
+  "features": {
+    "darkMode": true,
+    "search": true,
+    "math": true,
+    "codeHighlight": true,
+    "localMemory": true
+  },
+  "pages": [
+    "index.html",
+    "formulas.html",
+    "glossary.html",
+    "learning-paths.html",
+    "modern-extensions.html"
+  ],
+  "dataFiles": [
+    "assets/js/book-data.js",
+    "assets/js/components.js",
+    "assets/js/app.js",
+    "assets/js/visualizations.js"
+  ]
+}

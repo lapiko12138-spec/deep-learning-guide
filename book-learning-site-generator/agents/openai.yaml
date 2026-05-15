@@ -1,0 +1,4 @@
+interface:
+  display_name: "Book Learning Site Generator"
+  short_description: "Turn a book PDF into an aligned learning website"
+  default_prompt: "Use $book-learning-site-generator to analyze this book PDF and design a Feynman-style reading website."
