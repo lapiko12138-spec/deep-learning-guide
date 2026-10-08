@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "paper": "2610.08448v1",
+  "updated": "2026-10-08",
+  "current_stage": 1,
+  "stage_status": "awaiting_answers",
+  "concepts": {
+    "teacher-student": {
+      "status": "已讲解，待检查",
+      "evidence": null,
+      "next_review": "收到回答后，用新例子复测"
+    },
+    "distillation": {
+      "status": "已讲解，待检查",
+      "evidence": null,
+      "next_review": "收到回答后，用新例子复测"
+    },
+    "opd": {
+      "status": "已讲解，待检查",
+      "evidence": null,
+      "next_review": "收到回答后，用新例子复测"
+    },
+    "token": {
+      "status": "已讲解，待检查",
+      "evidence": null,
+      "next_review": "收到回答后，用新例子复测"
+    },
+    "alignment": {
+      "status": "已讲解，待检查",
+      "evidence": null,
+      "next_review": "收到回答后，用新例子复测"
+    }
+  },
+  "qa": [
+    {
+      "id": "Q1",
+      "question": "OPD 中，是学生先尝试作答，还是老师先写完整范文让学生照抄？用自己的话解释。",
+      "concept_ids": [
+        "opd",
+        "teacher-student"
+      ],
+      "answer": null,
+      "assessment": "待回答",
+      "misconception": null,
+      "correction": null
+    },
+    {
+      "id": "Q2",
+      "question": "同样是“学习”，A 切成 [学习]，B 切成 [学][习]。文字意思相同，为什么不能直接一块对一块比较？",
+      "concept_ids": [
+        "token",
+        "alignment"
+      ],
+      "answer": null,
+      "assessment": "待回答",
+      "misconception": null,
+      "correction": null
+    },
+    {
+      "id": "Q3",
+      "question": "如果把更多地方纳入指导，能否只凭“指导范围变大”就断定学生学得更好？还要看什么？",
+      "concept_ids": [
+        "alignment"
+      ],
+      "answer": null,
+      "assessment": "待回答",
+      "misconception": null,
+      "correction": null
+    }
+  ],
+  "unknown_concepts": [],
+  "unknown_concepts_note": "目前尚无用户回答，不能臆测哪些概念不懂。用户表示不懂或回答暴露混淆时，记录原话、解释与复测题。",
+  "history": [
+    {
+      "date": "2026-10-08",
+      "event": "创建第一节与3道检查题；尚未评估掌握程度。"
+    }
+  ]
+}
