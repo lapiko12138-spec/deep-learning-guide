@@ -3,11 +3,11 @@
   "paper": "2610.08448v1",
   "updated": "2026-10-08",
   "current_stage": 1,
-  "stage_status": "awaiting_answers",
+  "stage_status": "reinforcing_alignment",
   "concepts": {
     "teacher-student": {
-      "status": "已讲解，待检查",
-      "evidence": null,
+      "status": "初步理解",
+      "evidence": "Q1：学生先回答 老师根据学生回答给出建议",
       "next_review": "收到回答后，用新例子复测"
     },
     "distillation": {
@@ -16,19 +16,24 @@
       "next_review": "收到回答后，用新例子复测"
     },
     "opd": {
-      "status": "已讲解，待检查",
-      "evidence": null,
+      "status": "初步理解",
+      "evidence": "Q1：学生先回答 老师根据学生回答给出建议",
       "next_review": "收到回答后，用新例子复测"
     },
     "token": {
-      "status": "已讲解，待检查",
-      "evidence": null,
-      "next_review": "收到回答后，用新例子复测"
+      "status": "需巩固",
+      "evidence": "Q2 用户明确表示“不懂”；未推断具体错误观点。",
+      "next_review": "A：[今天][下雨]；B：[今天][下][雨]。A 的 [下雨] 应该对应 B 的哪几块？"
     },
     "alignment": {
-      "status": "已讲解，待检查",
-      "evidence": null,
-      "next_review": "收到回答后，用新例子复测"
+      "status": "需巩固",
+      "evidence": "Q2 用户明确表示“不懂”；未推断具体错误观点。",
+      "next_review": "A：[今天][下雨]；B：[今天][下][雨]。A 的 [下雨] 应该对应 B 的哪几块？"
+    },
+    "coverage-effect": {
+      "status": "初步理解",
+      "evidence": "Q3：不能 学习效果需要检查训练后的表现。",
+      "next_review": "后续读表时复测位置覆盖与准确率的区别"
     }
   },
   "qa": [
@@ -39,10 +44,10 @@
         "opd",
         "teacher-student"
       ],
-      "answer": null,
-      "assessment": "待回答",
+      "answer": "学生先回答 老师根据学生回答给出建议",
+      "assessment": "初步理解",
       "misconception": null,
-      "correction": null
+      "correction": "顺序正确；老师提供的参考包含在学生已到达前缀处的下一token概率。"
     },
     {
       "id": "Q2",
@@ -51,15 +56,27 @@
         "token",
         "alignment"
       ],
-      "answer": null,
-      "assessment": "待回答",
+      "answer": "不懂",
+      "assessment": "需巩固",
       "misconception": null,
-      "correction": null
+      "correction": "把同一句话想成一条纸带。A 把“学习”留成一整片，B 把它剪成“学”和“习”两片。A 的一片包含两个字，B 的第一片只有“学”；直接比较这两片，比较的内容范围就不同。要比较同一段文字，就让 A 的 [学习] 对应 B 的 [学]+[习]。这是1对2的不匹配组；拼起来能对应，不等于严格1对1。此为人为教学示意，不是真实模型的分词结果。"
     },
     {
       "id": "Q3",
       "question": "如果把更多地方纳入指导，能否只凭“指导范围变大”就断定学生学得更好？还要看什么？",
       "concept_ids": [
+        "alignment"
+      ],
+      "answer": "不能 学习效果需要检查训练后的表现。",
+      "assessment": "初步理解",
+      "misconception": null,
+      "correction": null
+    },
+    {
+      "id": "Q2-R1",
+      "question": "A：[今天][下雨]；B：[今天][下][雨]。A 的 [下雨] 应该对应 B 的哪几块？",
+      "concept_ids": [
+        "token",
         "alignment"
       ],
       "answer": null,
@@ -68,12 +85,25 @@
       "correction": null
     }
   ],
-  "unknown_concepts": [],
-  "unknown_concepts_note": "目前尚无用户回答，不能臆测哪些概念不懂。用户表示不懂或回答暴露混淆时，记录原话、解释与复测题。",
+  "unknown_concepts": [
+    {
+      "id": "token-alignment",
+      "user_words": "不懂",
+      "context": "Q2",
+      "status": "已补充解释，待复测",
+      "explanation": "把同一句话想成一条纸带。A 把“学习”留成一整片，B 把它剪成“学”和“习”两片。A 的一片包含两个字，B 的第一片只有“学”；直接比较这两片，比较的内容范围就不同。要比较同一段文字，就让 A 的 [学习] 对应 B 的 [学]+[习]。这是1对2的不匹配组；拼起来能对应，不等于严格1对1。此为人为教学示意，不是真实模型的分词结果。",
+      "review_question": "A：[今天][下雨]；B：[今天][下][雨]。A 的 [下雨] 应该对应 B 的哪几块？"
+    }
+  ],
+  "unknown_concepts_note": "已归档用户明确表示不懂的切块与对齐；不把不懂推断为某种具体错误观点。",
   "history": [
     {
       "date": "2026-10-08",
       "event": "创建第一节与3道检查题；尚未评估掌握程度。"
+    },
+    {
+      "date": "2026-10-08",
+      "event": "Q1/Q3初步理解；Q2需巩固。补充纸带切块比喻，并等待一题复测。"
     }
   ]
 }
